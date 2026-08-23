@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
 
-// Ваша готовая ссылка на облачную базу данных MongoDB Atlas
+ Ваша готовая ссылка на облачную базу данных MongoDB Atlas
 const MONGO_URI = "mongodb+srv://admin:LinkPlayer2026@cluster0.ovmwocy.mongodb.net/linkplayer?retryWrites=true&w=majority";
 
 // Подключение к облачной базе данных
