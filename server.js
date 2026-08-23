@@ -4,19 +4,18 @@ const fs = require('fs');
 const path = require('path');
 const mongoose = require('mongoose');
 
-const MONGO_URI = "mongodb://admin:LinkPlayer2026@cluster0-shard-00-00.ovmwocy.mongodb.net:27017,cluster0-shard-00-01.ovmwocy.mongodb.net:27017,cluster0-shard-00-02.ovmwocy.mongodb.net:27017/linkplayer?ssl=true&replicaSet=atlas-t0t98z-shard-0&authSource=admin&retryWrites=true&w=majority";
+// Берём защищенную ссылку из настроек хостинга, либо используем прямые адреса серверов
+const MONGO_URI = process.env.MONGO_URL || "mongodb://admin:LinkPlayer2026@cluster0-shard-00-00.ovmwocy.mongodb.net:27017,cluster0-shard-00-01.ovmwocy.mongodb.net:27017,cluster0-shard-00-02.ovmwocy.mongodb.net:27017/linkplayer?ssl=true&replicaSet=atlas-t0t98z-shard-0&authSource=admin&retryWrites=true&w=majority";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log('📦 Успешное подключение к облачной базе MongoDB Atlas!'))
     .catch(err => console.error('❌ Ошибка подключения к базе:', err));
 
-// Обновленная коммерческая схема с поддержкой M3U и Xtream Codes
 const DeviceSchema = new mongoose.Schema({
     macAddress: { type: String, required: true, unique: true, lowercase: true, trim: true },
     pinCode: { type: String, required: true },
     playlistUrl: { type: String, default: '' },
     isLinked: { type: Boolean, default: false },
-    // Поля Xtream Codes
     isXtream: { type: Boolean, default: false },
     xtreamUrl: { type: String, default: '' },
     xtreamUser: { type: String, default: '' },
@@ -38,7 +37,7 @@ const server = http.createServer(async (req, res) => {
         fs.readFile(path.join(__dirname, 'index.html'), (err, content) => {
             if (err) {
                 res.writeHead(500, { 'Content-Type': 'text/plain; charset=utf-8' });
-                res.end('Ошибка: файл index.html не найден!');
+                res.end('Ошибка: index.html не найден!');
             } else {
                 res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' });
                 res.end(content);
@@ -56,7 +55,7 @@ const server = http.createServer(async (req, res) => {
                 const macAddress = data.macAddress;
                 if (!macAddress) {
                     res.writeHead(400, { 'Content-Type': 'application/json' });
-                    res.end(JSON.stringify({ error: 'Не указан macAddress' }));
+                    res.end(JSON.stringify({ error: 'Нет macAddress' }));
                     return;
                 }
                 let device = await Device.findOne({ macAddress });
@@ -69,7 +68,7 @@ const server = http.createServer(async (req, res) => {
                 res.end(JSON.stringify({ pin: device.pinCode }));
             } catch (e) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Ошибка сервера базы данных' }));
+                res.end(JSON.stringify({ error: 'Ошибка MongoDB' }));
             }
         });
     } 
@@ -77,7 +76,7 @@ const server = http.createServer(async (req, res) => {
         const macAddress = parsedUrl.query.macAddress;
         if (!macAddress) {
             res.writeHead(400, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Не указан macAddress' }));
+            res.end(JSON.stringify({ error: 'Нет macAddress' }));
             return;
         }
         try {
@@ -97,7 +96,7 @@ const server = http.createServer(async (req, res) => {
             }
         } catch (e) {
             res.writeHead(500, { 'Content-Type': 'application/json' });
-            res.end(JSON.stringify({ error: 'Ошибка базы данных' }));
+            res.end(JSON.stringify({ error: 'Ошибка базы' }));
         }
     } 
     else if (pathname === '/api/link-device' && req.method === 'POST') {
@@ -115,17 +114,16 @@ const server = http.createServer(async (req, res) => {
                 
                 if (!device) {
                     res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
-                    res.end(JSON.stringify({ success: false, message: 'Неверный MAC-адрес или PIN-код!' }));
+                    res.end(JSON.stringify({ success: false, message: 'Неверный MAC или PIN!' }));
                     return;
                 }
 
-                // Сохраняем новые параметры в зависимости от выбранного пользователем типа
                 device.isXtream = isXtream || false;
                 if (device.isXtream) {
                     device.xtreamUrl = xtreamUrl || '';
                     device.xtreamUser = xtreamUser || '';
                     device.xtreamPass = xtreamPass || '';
-                    device.playlistUrl = ''; // очищаем m3u
+                    device.playlistUrl = '';
                 } else {
                     device.playlistUrl = playlistUrl || '';
                     device.xtreamUrl = ''; device.xtreamUser = ''; device.xtreamPass = '';
@@ -135,18 +133,20 @@ const server = http.createServer(async (req, res) => {
                 await device.save();
                 
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
-                res.end(JSON.stringify({ success: true, message: 'Устройство успешно связано!' }));
+                res.end(JSON.stringify({ success: true, message: 'Успешно связано!' }));
             } catch (e) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ error: 'Ошибка сохранения' }));
             }
         });
     } else {
-        res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
-        res.end('Страница не найдена');
+        res.writeHead(404, { 'Content-Type': 'text/plain' });
+        res.end('404 Not Found');
     }
 });
 
-server.listen(3000, '0.0.0.0', () => {
-    console.log('🚀 Промышленный сервер LinkPlayer с базой данных и Xtream запущен!');
+// На Render порт по умолчанию задается через переменную окружения PORT, либо 3000
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, '0.0.0.0', () => {
+    console.log(`🚀 Коммерческий сервер запущен на порту ${PORT}`);
 });
