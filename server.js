@@ -5,7 +5,8 @@ const path = require('path');
 const mongoose = require('mongoose');
 
  // Ваша готовая ссылка на облачную базу данных MongoDB Atlas
-const MONGO_URI = "mongodb+srv://admin:LinkPlayer2026@cluster0.ovmwocy.mongodb.net/linkplayer?retryWrites=true&w=majority";
+const MONGO_URI = "mongodb://admin:LinkPlayer2026@cluster0-shard-00-00.ovmwocy.mongodb.net:27017,cluster0-shard-00-01.ovmwocy.mongodb.net:27017,cluster0-shard-00-02.ovmwocy.mongodb.net:27017/linkplayer?ssl=true&replicaSet=atlas-t0t98z-shard-0&authSource=admin&retryWrites=true&w=majority";
+
 
 // Подключение к облачной базе данных
 mongoose.connect(MONGO_URI)
