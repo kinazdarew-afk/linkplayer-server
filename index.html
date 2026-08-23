@@ -3,211 +3,182 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkPlayer — Подключение устройства</title>
+    <title>Панель управления LinkPlayer</title>
     <style>
-        /* Базовые настройки страницы */
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { 
-            background-color: #0A0A0C; 
-            color: #E4E4E7; 
-            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            min-height: screen;
-            height: 100vh;
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #0f0f12;
+            color: #ffffff;
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
-        }
-
-        /* Шапка сайта */
-        header {
-            max-width: 1100px;
-            width: 100%;
-            margin: 0 auto;
-            padding: 24px;
-            display: flex;
-            justify-content: space-between;
-            items-center: center;
-        }
-        .logo-block { display: flex; align-items: center; gap: 12px; }
-        .logo-text {
-            font-size: 24px;
-            font-weight: 800;
-            background: linear-gradient(to right, #8A2BE2, #00E5FF);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        .nav-links { display: flex; gap: 24px; }
-        .nav-links a { color: #A1A1AA; text-decoration: none; font-size: 14px; transition: color 0.2s; }
-        .nav-links a:hover { color: #FFFFFF; }
-
-        /* Главная карточка формы */
-        main {
-            flex: 1;
-            display: flex;
-            align-items: center;
             justify-content: center;
-            padding: 24px;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
         }
-        .card {
-            max-width: 440px;
+        .container {
+            background-color: #16161a;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.5);
             width: 100%;
-            background-color: rgba(255, 255, 255, 0.03);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 16px;
-            padding: 32px;
-            backdrop-filter: blur(12px);
-            box-shadow: 0 0 40px rgba(138, 43, 226, 0.15);
+            max-width: 450px;
+            border: 1px solid #24242b;
         }
-        h1 { font-size: 24px; font-weight: 700; text-align: center; color: #FFFFFF; margin-bottom: 8px; }
-        .subtitle { font-size: 14px; color: #A1A1AA; text-align: center; margin-bottom: 32px; line-height: 1.5; }
-
-        /* Поля ввода (Inputs) */
-        .form-group { margin-bottom: 20px; }
-        label { display: block; font-size: 11px; font-weight: 600; color: #A1A1AA; text-transform: uppercase; tracking: 0.05em; margin-bottom: 8px; }
-        .input-wrapper { position: relative; }
+        h2 { text-align: center; color: #8a2be2; margin-bottom: 25px; }
+        .input-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; color: #aaaaaa; font-size: 14px; }
         input {
             width: 100%;
-            background-color: rgba(0, 0, 0, 0.4);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 14px 16px;
-            color: #FFFFFF;
+            padding: 10px;
+            background-color: #1f1f24;
+            border: 1px solid #33333d;
+            border-radius: 6px;
+            color: white;
+            box-sizing: border-box;
             font-size: 15px;
-            transition: border-color 0.2s;
-            outline: none;
         }
-        input:focus { border-color: #00E5FF; }
-        #pinCode { font-family: monospace; tracking: 0.15em; font-size: 16px; }
-        #pinCode:focus { border-color: #8A2BE2; }
-
-        /* Кнопка отправки */
+        input:focus { border-color: #8a2be2; outline: none; }
+        .tabs {
+            display: flex;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #24242b;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            cursor: pointer;
+            color: #aaaaaa;
+            font-weight: bold;
+            transition: 0.3s;
+        }
+        .tab.active {
+            color: #8a2be2;
+            border-bottom: 2px solid #8a2be2;
+        }
+        .hidden { display: none; }
         button {
             width: 100%;
-            background: linear-gradient(to right, #8A2BE2, #00E5FF);
-            color: #FFFFFF;
-            font-size: 16px;
-            font-weight: 700;
-            padding: 14px;
+            padding: 12px;
+            background: linear-gradient(45deg, #8a2be2, #4a00e0);
             border: none;
-            border-radius: 12px;
+            border-radius: 6px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
             cursor: pointer;
-            box-shadow: 0 4px 14px rgba(0, 229, 255, 0.2);
-            transition: all 0.2s;
-            margin-top: 16px;
+            margin-top: 10px;
+            transition: 0.3s;
         }
-        button:hover { filter: brightness(1.1); box-shadow: 0 4px 20px rgba(138, 43, 226, 0.4); }
-        button:active { transform: scale(0.98); }
-
-        /* Окно статуса */
-        #statusMessage {
-            display: none;
-            padding: 16px;
-            border-radius: 12px;
-            font-size: 14px;
-            font-weight: 500;
-            text-align: center;
-            margin-bottom: 24px;
-        }
-
-        /* Подвал */
-        footer { padding: 24px; text-align: center; font-size: 12px; color: #52525B; border-top: 1px solid rgba(255,255,255,0.03); }
+        button:hover { opacity: 0.9; }
+        #message { text-align: center; margin-top: 15px; font-weight: bold; }
+        .success { color: #00ff7f; }
+        .error { color: #ff4500; }
     </style>
 </head>
 <body>
 
-    <!-- Шапка сайта -->
-    <header>
-        <div class="logo-block">
-            <span class="logo-text">LinkPlayer</span>
+<div class="container">
+    <h2>LinkPlayer Activation</h2>
+    
+    <div class="input-group">
+        <label>MAC-адрес / Device ID</label>
+        <input type="text" id="macAddress" placeholder="Например: 97:74:D5:6D:68:2E:54:9C" required>
+    </div>
+    
+    <div class="input-group">
+        <label>PIN-код активации</label>
+        <input type="text" id="pinCode" placeholder="6-значный код с экрана ТВ" required>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" id="tabM3u" onclick="switchTab('m3u')">M3U Ссылка</div>
+        <div class="tab" id="tabXtream" onclick="switchTab('xtream')">Xtream API</div>
+    </div>
+
+    <!-- Форма для M3U -->
+    <div id="formM3u" class="input-group">
+        <label>Ссылка на плейлист (.m3u / .m3u8)</label>
+        <input type="url" id="playlistUrl" placeholder="https://example.com">
+    </div>
+
+    <!-- Форма для Xtream Codes -->
+    <div id="formXtream" class="hidden">
+        <div class="input-group">
+            <label>Адрес сервера (Host URL)</label>
+            <input type="url" id="xtreamUrl" placeholder="http://provider-dns.com:8080">
         </div>
-        <div class="nav-links">
-            <a href="#">Инструкция</a>
-            <a href="#">Поддержка</a>
+        <div class="input-group">
+            <label>Имя пользователя (Username)</label>
+            <input type="text" id="xtreamUser" placeholder="Логин">
         </div>
-    </header>
-
-    <!-- Форма привязки -->
-    <main>
-        <div class="card">
-            <h1>Подключение устройства</h1>
-            <p class="subtitle">Введите MAC-адрес и 6-значный код активации с экрана вашего телевизора или телефона</p>
-
-            <!-- Окно статуса запроса -->
-            <div id="statusMessage"></div>
-
-            <form id="linkForm">
-                <!-- Поле MAC-адреса -->
-                <div class="form-group">
-                    <label>MAC-адрес / Device ID</label>
-                    <input type="text" id="macAddress" placeholder="Например: 03:DC:B8:DA:AB:F9" required>
-                </div>
-
-                <!-- Поле PIN-кода -->
-                <div class="form-group">
-                    <label>Код активации (PIN)</label>
-                    <input type="text" id="pinCode" maxlength="6" placeholder="6 цифр с экрана" required>
-                </div>
-
-                <!-- Поле ссылки на M3U плейлист -->
-                <div class="form-group">
-                    <label>Ссылка на .m3u плейлист</label>
-                    <input type="url" id="playlistUrl" placeholder="https://provider.com" required>
-                </div>
-
-                <!-- Кнопка отправки формы -->
-                <button type="submit">Связать устройство</button>
-            </form>
+        <div class="input-group">
+            <label>Пароль (Password)</label>
+            <input type="password" id="xtreamPass" placeholder="Пароль">
         </div>
-    </main>
+    </div>
 
-    <!-- Подвал -->
-    <footer>
-        &copy; 2026 LinkPlayer. Все права защищены.
-    </footer>
+    <button onclick="submitForm()">Связать устройство</button>
+    <div id="message"></div>
+</div>
 
-    <!-- JS логика для связи с сервером -->
-    <script>
-        document.getElementById('linkForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
+<script>
+    let currentMode = 'm3u';
+
+    function switchTab(mode) {
+        currentMode = mode;
+        if(mode === 'm3u') {
+            document.getElementById('tabM3u').classList.add('active');
+            document.getElementById('tabXtream').classList.remove('active');
+            document.getElementById('formM3u').classList.remove('hidden');
+            document.getElementById('formXtream').classList.add('hidden');
+        } else {
+            document.getElementById('tabM3u').classList.remove('active');
+            document.getElementById('tabXtream').classList.add('active');
+            document.getElementById('formM3u').classList.add('hidden');
+            document.getElementById('formXtream').classList.remove('hidden');
+        }
+    }
+
+    async function submitForm() {
+        const messageDiv = document.getElementById('message');
+        messageDiv.className = '';
+        messageDiv.innerText = 'Отправка данных...';
+
+        const data = {
+            macAddress: document.getElementById('macAddress').value.trim(),
+            pinCode: document.getElementById('pinCode').value.trim(),
+            isXtream: currentMode === 'xtream'
+        };
+
+        if (currentMode === 'm3u') {
+            data.playlistUrl = document.getElementById('playlistUrl').value.trim();
+        } else {
+            data.xtreamUrl = document.getElementById('xtreamUrl').value.trim();
+            data.xtreamUser = document.getElementById('xtreamUser').value.trim();
+            data.xtreamPass = document.getElementById('xtreamPass').value.trim();
+        }
+
+        try {
+            const response = await fetch('/api/link-device', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            const result = await response.json();
             
-            const macAddress = document.getElementById('macAddress').value.trim();
-            const pinCode = document.getElementById('pinCode').value.trim();
-            const playlistUrl = document.getElementById('playlistUrl').value.trim();
-            const statusBox = document.getElementById('statusMessage');
-
-            statusBox.style.display = "block";
-            statusBox.style.backgroundColor = "rgba(59, 130, 246, 0.1)";
-            statusBox.style.color = "#60A5FA";
-            statusBox.style.border = "1px solid rgba(59, 130, 246, 0.2)";
-            statusBox.innerText = "Отправка данных...";
-
-            try {
-                const response = await fetch('/api/link-device', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ macAddress, pinCode, playlistUrl })
-                });
-
-                const data = await response.json();
-
-                if (response.ok) {
-                    statusBox.style.backgroundColor = "rgba(34, 197, 94, 0.1)";
-                    statusBox.style.color = "#4ADE80";
-                    statusBox.style.border = "1px solid rgba(34, 197, 94, 0.2)";
-                    statusBox.innerText = "Успешно! Плейлист загружен в систему.";
-                } else {
-                    statusBox.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
-                    statusBox.style.color = "#F87171";
-                    statusBox.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-                    statusBox.innerText = data.message || "Ошибка подключения";
-                }
-            } catch (error) {
-                statusBox.style.backgroundColor = "rgba(239, 68, 68, 0.1)";
-                statusBox.style.color = "#F87171";
-                statusBox.style.border = "1px solid rgba(239, 68, 68, 0.2)";
-                statusBox.innerText = "Не удалось связаться с сервером.";
+            if (response.ok && result.success) {
+                messageDiv.className = 'success';
+                messageDiv.innerText = 'Устройство успешно связано! Плеер перезапустится автоматичски.';
+            } else {
+                messageDiv.className = 'error';
+                messageDiv.innerText = result.message || 'Ошибка привязки устройства.';
             }
-        });
-    </script>
+        } catch (error) {
+            messageDiv.className = 'error';
+            messageDiv.innerText = 'Ошибка подключения к серверу.';
+        }
+    }
+</script>
 </body>
 </html>
