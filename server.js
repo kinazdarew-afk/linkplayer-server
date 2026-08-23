@@ -114,7 +114,7 @@ const server = http.createServer((req, res) => {
     }
 });
 
-server.listen(80, '0.0.0.0', () => {
+server.listen(3000, '0.0.0.0', () => {
     console.log('\n==================================================');
     console.log('🚀 Сервер LinkPlayer ОБНОВЛЕН!');
     console.log('🔒 Теперь сервер принимает запросы со всех Wi-Fi устройств!');
