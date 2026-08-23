@@ -2,11 +2,26 @@ const http = require('http');
 const url = require('url');
 const fs = require('fs');
 const path = require('path');
+const mongoose = require('mongoose');
 
-// База данных устройств в памяти сервера
-let devices = [];
+// Ваша готовая ссылка на облачную базу данных MongoDB Atlas
+const MONGO_URI = "mongodb+srv://admin:LinkPlayer2026@cluster0.ovmwocy.mongodb.net/linkplayer?retryWrites=true&w=majority";
 
-const server = http.createServer((req, res) => {
+// Подключение к облачной базе данных
+mongoose.connect(MONGO_URI)
+    .then(() => console.log('📦 Успешное подключение к облачной базе MongoDB Atlas!'))
+    .catch(err => console.error('❌ Ошибка подключения к базе:', err));
+
+// Схема хранения данных устройства в базе
+const DeviceSchema = new mongoose.Schema({
+    macAddress: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    pinCode: { type: String, required: true },
+    playlistUrl: { type: String, default: '' },
+    isLinked: { type: Boolean, default: false }
+});
+const Device = mongoose.model('Device', DeviceSchema);
+
+const server = http.createServer(async (req, res) => {
     const parsedUrl = url.parse(req.url, true);
     const pathname = parsedUrl.pathname;
 
@@ -20,7 +35,7 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // Отдача главной страницы сайта
+    // Главная страница сайта
     if (pathname === '/' && req.method === 'GET') {
         fs.readFile(path.join(__dirname, 'index.html'), (err, content) => {
             if (err) {
@@ -34,11 +49,11 @@ const server = http.createServer((req, res) => {
         return;
     }
 
-    // 1. Запрос от Android: Получить PIN-код от сервера
+    // 1. API: Получить или создать ПИН-код в БАЗЕ ДАННЫХ
     if (pathname === '/api/get-pin' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
-        req.on('end', () => {
+        req.on('end', async () => {
             try {
                 const data = JSON.parse(body);
                 const macAddress = data.macAddress;
@@ -49,48 +64,62 @@ const server = http.createServer((req, res) => {
                     return;
                 }
 
-                let device = devices.find(d => d.macAddress === macAddress);
+                // Ищем устройство в реальной базе
+                let device = await Device.findOne({ macAddress });
                 
-                // СЕРВЕР САМ НАЗНАЧАЕТ УНИКАЛЬНЫЙ КОД, ЕСЛИ УСТРОЙСТВА НЕТ В БАЗЕ
+                // Если устройства нет, генерируем PIN и НАВСЕГДА сохраняем в базу
                 if (!device) {
                     const pinCode = Math.floor(100000 + Math.random() * 900000).toString();
-                    device = { macAddress, pinCode, playlistUrl: '', isLinked: false };
-                    devices.push(device);
+                    device = new Device({ macAddress, pinCode });
+                    await device.save();
                 }
 
                 res.writeHead(200, { 'Content-Type': 'application/json' });
                 res.end(JSON.stringify({ pin: device.pinCode }));
             } catch (e) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Ошибка JSON' }));
+                res.end(JSON.stringify({ error: 'Ошибка сервера базы данных' }));
             }
         });
     } 
     
-    // 2. Запрос от Android: Проверить статус привязки плейлиста
+    // 2. API: Проверить статус привязки устройства
     else if (pathname === '/api/check-status' && req.method === 'GET') {
         const macAddress = parsedUrl.query.macAddress;
-        let device = devices.find(d => d.macAddress === macAddress);
-        
-        res.writeHead(200, { 'Content-Type': 'application/json' });
-        if (!device) {
-            res.end(JSON.stringify({ isLinked: false }));
-        } else {
-            res.end(JSON.stringify({ isLinked: device.isLinked, playlistUrl: device.playlistUrl }));
+        if (!macAddress) {
+            res.writeHead(400, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Не указан macAddress' }));
+            return;
+        }
+
+        try {
+            let device = await Device.findOne({ macAddress });
+            res.writeHead(200, { 'Content-Type': 'application/json' });
+            if (!device) {
+                res.end(JSON.stringify({ isLinked: false }));
+            } else {
+                res.end(JSON.stringify({ isLinked: device.isLinked, playlistUrl: device.playlistUrl }));
+            }
+        } catch (e) {
+            res.writeHead(500, { 'Content-Type': 'application/json' });
+            res.end(JSON.stringify({ error: 'Ошибка базы данных' }));
         }
     } 
     
-    // 3. Запрос от САЙТА: Связать устройство
+    // 3. API: Привязать плейлист на сайте по коду из БАЗЫ
     else if (pathname === '/api/link-device' && req.method === 'POST') {
         let body = '';
         req.on('data', chunk => { body += chunk.toString(); });
-        req.on('end', () => {
+        req.on('end', async () => {
             try {
                 const data = JSON.parse(body);
                 const { macAddress, pinCode, playlistUrl } = data;
                 
-                // Жесткое сравнение MAC и PIN в базе данных сервера
-                let device = devices.find(d => d.macAddress.trim().toLowerCase() === macAddress.trim().toLowerCase() && d.pinCode.trim() === pinCode.trim());
+                // Поиск строгого совпадения в базе данных
+                let device = await Device.findOne({ 
+                    macAddress: macAddress.trim().toLowerCase(), 
+                    pinCode: pinCode.trim() 
+                });
                 
                 if (!device) {
                     res.writeHead(400, { 'Content-Type': 'application/json; charset=utf-8' });
@@ -98,14 +127,16 @@ const server = http.createServer((req, res) => {
                     return;
                 }
 
+                // Записываем плейлист в базу навсегда
                 device.playlistUrl = playlistUrl;
                 device.isLinked = true;
+                await device.save();
                 
                 res.writeHead(200, { 'Content-Type': 'application/json; charset=utf-8' });
                 res.end(JSON.stringify({ success: true, message: 'Устройство успешно связано!' }));
             } catch (e) {
                 res.writeHead(400, { 'Content-Type': 'application/json' });
-                res.end(JSON.stringify({ error: 'Ошибка обработки' }));
+                res.end(JSON.stringify({ error: 'Ошибка сохранения' }));
             }
         });
     } else {
@@ -114,9 +145,7 @@ const server = http.createServer((req, res) => {
     }
 });
 
+// На бесплатном тарифе Render всегда слушаем порт 3000
 server.listen(3000, '0.0.0.0', () => {
-    console.log('\n==================================================');
-    console.log('🚀 Сервер LinkPlayer ОБНОВЛЕН!');
-    console.log('🔒 Теперь сервер принимает запросы со всех Wi-Fi устройств!');
-    console.log('==================================================\n');
+    console.log('🚀 Промышленный сервер LinkPlayer с базой данных запущен!');
 });
