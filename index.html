@@ -1,163 +1,259 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LinkPlayer | Панель управления</title>
+    <title>LinkPlayer | Dashboard</title>
     <style>
         :root { --neon-blue: #00e5ff; --neon-purple: #8a2be2; --bg-dark: #0a0a0c; --card-bg: #16161a; }
-        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-dark); color: #fff; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
-        .container { background-color: var(--card-bg); padding: 30px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); width: 90%; max-width: 460px; border: 1px solid #24242b; }
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background-color: var(--bg-dark); color: #fff; display: flex; flex-direction: column; justify-content: center; align-items: center; min-height: 100vh; margin: 0; }
+        .lang-switcher { position: absolute; top: 20px; right: 20px; display: flex; gap: 10px; }
+        .lang-btn { background: transparent; border: 1px solid #333; color: #777; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px; }
+        .lang-btn.active { color: var(--neon-blue); border-color: var(--neon-blue); }
+        .container { background-color: var(--card-bg); padding: 30px; border-radius: 20px; box-shadow: 0 15px 40px rgba(0,0,0,0.6); width: 90%; max-width: 480px; border: 1px solid #24242b; }
         h2 { text-align: center; background: linear-gradient(to right, var(--neon-blue), var(--neon-purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; font-weight: 900; letter-spacing: 1px; margin-bottom: 25px; }
-        .input-group { margin-bottom: 15px; }
-        label { display: block; margin-bottom: 8px; color: #777; font-size: 13px; font-weight: bold; }
-        input { width: 100%; padding: 12px; background: #1f1f24; border: 1px solid #333; border-radius: 10px; color: #fff; box-sizing: border-box; font-size: 15px; transition: 0.3s; }
-        input:focus { border-color: var(--neon-blue); outline: none; box-shadow: 0 0 10px rgba(0,229,255,0.2); }
-        .btn { width: 100%; padding: 14px; background: linear-gradient(45deg, var(--neon-purple), #4a00e0); border: none; border-radius: 10px; color: white; font-weight: bold; font-size: 16px; cursor: pointer; transition: 0.3s; margin-top: 10px; }
-        .btn:hover { transform: translateY(-2px); opacity: 0.9; box-shadow: 0 5px 15px rgba(138,43,226,0.4); }
+        .input-group { margin-bottom: 12px; }
+        label { display: block; margin-bottom: 6px; color: #777; font-size: 12px; font-weight: bold; }
+        input { width: 100%; padding: 10px; background: #1f1f24; border: 1px solid #333; border-radius: 8px; color: #fff; box-sizing: border-box; font-size: 14px; transition: 0.3s; }
+        input:focus { border-color: var(--neon-blue); outline: none; }
+        .btn { width: 100%; padding: 12px; background: linear-gradient(45deg, var(--neon-purple), #4a00e0); border: none; border-radius: 8px; color: white; font-weight: bold; cursor: pointer; transition: 0.3s; margin-top: 10px; }
+        .btn:hover { transform: translateY(-2px); opacity: 0.9; }
         .btn-secondary { background: transparent; border: 1px solid #444; color: #aaa; margin-top: 10px; }
-        .tabs { display: flex; border-bottom: 1px solid #222; margin-bottom: 25px; }
-        .tab { flex: 1; text-align: center; padding: 12px; cursor: pointer; color: #555; font-weight: bold; transition: 0.3s; }
+        .tabs { display: flex; border-bottom: 1px solid #222; margin-bottom: 20px; }
+        .tab { flex: 1; text-align: center; padding: 10px; cursor: pointer; color: #555; font-size: 13px; font-weight: bold; }
         .tab.active { color: var(--neon-blue); border-bottom: 2px solid var(--neon-blue); }
-        .device-item { background: #1f1f24; border-radius: 12px; padding: 15px; margin-bottom: 12px; border-left: 4px solid var(--neon-blue); }
-        .device-item h4 { margin: 0; font-size: 16px; color: #eee; }
-        .device-item p { margin: 5px 0 0; font-size: 12px; color: #666; word-break: break-all; }
+        .device-item { background: #1f1f24; border-radius: 12px; padding: 12px; margin-bottom: 10px; border-left: 4px solid var(--neon-blue); position: relative; }
+        .device-item h4 { margin: 0; font-size: 14px; color: #eee; }
+        .device-item p { margin: 5px 0 0; font-size: 11px; color: #666; word-break: break-all; }
         .hidden { display: none; }
-        #msg { text-align: center; margin-top: 15px; font-weight: bold; font-size: 14px; }
+        #msg { text-align: center; margin-top: 15px; font-weight: bold; font-size: 13px; }
         .error { color: #ff4d4d; }
         .success { color: #00ff88; }
     </style>
 </head>
 <body>
 
+<div class="lang-switcher">
+    <button class="lang-btn" onclick="setLang('en')" id="btn-en">EN</button>
+    <button class="lang-btn" onclick="setLang('ru')" id="btn-ru">RU</button>
+    <button class="lang-btn" onclick="setLang('az')" id="btn-az">AZ</button>
+</div>
+
 <div id="root" class="container">
-    <h2>LinkPlayer Panel</h2>
-    <div id="content">Загрузка...</div>
+    <h2 id="t-title">LinkPlayer Panel</h2>
+    <div id="content">Loading...</div>
     <div id="msg"></div>
 </div>
 
 <script>
+    const translations = {
+        en: {
+            title: "LinkPlayer Panel",
+            login: "Login",
+            register: "Register",
+            email: "E-mail",
+            password: "Password",
+            btn_login: "Sign In",
+            btn_register: "Create Account",
+            btn_logout: "Logout",
+            account: "Account",
+            my_devices: "My Devices",
+            no_devices: "No linked devices yet",
+            link_new: "Link New Device",
+            mac: "MAC Address",
+            pin: "PIN from TV Screen",
+            m3u_tab: "M3U Link",
+            xtream_tab: "Xtream API",
+            playlist_label: "Playlist URL (.m3u)",
+            host: "Host URL",
+            user: "Username",
+            pass: "Password",
+            btn_link: "Add to Account",
+            success: "Success!",
+            error: "Error: Check MAC or PIN"
+        },
+        ru: {
+            title: "Панель LinkPlayer",
+            login: "Вход",
+            register: "Регистрация",
+            email: "Эл. почта",
+            password: "Пароль",
+            btn_login: "Войти",
+            btn_register: "Создать аккаунт",
+            btn_logout: "Выйти из профиля",
+            account: "Аккаунт",
+            my_devices: "Мои устройства",
+            no_devices: "У вас пока нет устройств",
+            link_new: "Привязать новое устройство",
+            mac: "MAC-адрес",
+            pin: "PIN-код с экрана ТВ",
+            m3u_tab: "M3U Ссылка",
+            xtream_tab: "Xtream API",
+            playlist_label: "Ссылка на плейлист (.m3u)",
+            host: "Адрес сервера (Host)",
+            user: "Имя пользователя",
+            pass: "Пароль",
+            btn_link: "Добавить в аккаунт",
+            success: "Успешно!",
+            error: "Ошибка: проверьте MAC или PIN"
+        },
+        az: {
+            title: "LinkPlayer Paneli",
+            login: "Giriş",
+            register: "Qeydiyyat",
+            email: "E-poçt",
+            password: "Şifrə",
+            btn_login: "Daxil ol",
+            btn_register: "Hesab yarat",
+            btn_logout: "Hesabdan çıx",
+            account: "Hesab",
+            my_devices: "Cihazlarım",
+            no_devices: "Hələlik cihaz yoxdur",
+            link_new: "Yeni cihaz bağla",
+            mac: "MAC ünvanı",
+            pin: "TV-dəki PİN kod",
+            m3u_tab: "M3U Linki",
+            xtream_tab: "Xtream API",
+            playlist_label: "Pleyлист linki (.m3u)",
+            host: "Server ünvanı (Host)",
+            user: "İstifadəçi adı",
+            pass: "Şifrə",
+            btn_link: "Hesaba əlavə et",
+            success: "Uğurlu!",
+            error: "Xəta: MAC və ya PİN-i yoxlayın"
+        }
+    };
+
+    let currentLang = localStorage.getItem('lang') || 'en';
     let currentUser = null;
-    let mode = 'login'; // login, register, dashboard
+    let authMode = 'login';
+    let linkMode = 'm3u'; // m3u or xtream
 
     async function init() {
         const res = await fetch('/api/auth/me');
         const data = await res.json();
-        if (data.loggedIn) {
-            currentUser = data;
-            mode = 'dashboard';
-        }
+        currentUser = data.loggedIn ? data : null;
         render();
+        updateLangUI();
+    }
+
+    function setLang(l) {
+        currentLang = l;
+        localStorage.setItem('lang', l);
+        render();
+        updateLangUI();
+    }
+
+    function updateLangUI() {
+        document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById(`btn-${currentLang}`).classList.add('active');
+        document.getElementById('t-title').innerText = translations[currentLang].title;
+    }
+
+    function render() {
+        const root = document.getElementById('content');
+        const t = translations[currentLang];
+        
+        if (!currentUser) {
+            root.innerHTML = `
+                <div class="tabs">
+                    <div class="tab ${authMode === 'login' ? 'active' : ''}" onclick="setAuthMode('login')">${t.login}</div>
+                    <div class="tab ${authMode === 'register' ? 'active' : ''}" onclick="setAuthMode('register')">${t.register}</div>
+                </div>
+                <form onsubmit="handleAuth(event)">
+                    <div class="input-group"><label>${t.email}</label><input type="email" id="email" required></div>
+                    <div class="input-group"><label>${t.password}</label><input type="password" id="password" required></div>
+                    <button class="btn" type="submit">${authMode === 'login' ? t.btn_login : t.btn_register}</button>
+                </form>
+            `;
+        } else {
+            renderDashboard(root, t);
+        }
+    }
+
+    async function renderDashboard(el, t) {
+        const res = await fetch('/api/user/devices');
+        const devices = await res.json();
+        
+        el.innerHTML = `
+            <p style="text-align:center; color:#555; font-size:12px;">${t.account}: ${currentUser.email}</p>
+            <h3 style="font-size:16px; margin-bottom:15px; border-bottom:1px solid #222; padding-bottom:5px;">${t.my_devices}</h3>
+            <div style="max-height: 200px; overflow-y: auto; margin-bottom: 20px;">
+                ${devices.map(d => `
+                    <div class="device-item">
+                        <h4>MAC: ${d.macAddress.toUpperCase()}</h4>
+                        <p>${d.isXtream ? 'Xtream API' : (d.playlistUrl || '---')}</p>
+                    </div>
+                `).join('') || `<p style="text-align:center; color:#444;">${t.no_devices}</p>`}
+            </div>
+            
+            <form onsubmit="linkDevice(event)" style="border-top: 1px solid #222; padding-top: 20px;">
+                <label style="color:var(--neon-blue); margin-bottom:15px; display:block;">${t.link_new}</label>
+                <input type="text" id="mac" placeholder="${t.mac}" required style="margin-bottom:10px;">
+                <input type="text" id="pin" placeholder="${t.pin}" required style="margin-bottom:15px;">
+                
+                <div class="tabs">
+                    <div class="tab ${linkMode === 'm3u' ? 'active' : ''}" onclick="setLinkMode('m3u')">${t.m3u_tab}</div>
+                    <div class="tab ${linkMode === 'xtream' ? 'active' : ''}" onclick="setLinkMode('xtream')">${t.xtream_tab}</div>
+                </div>
+
+                <div id="m3uForm" class="${linkMode === 'm3u' ? '' : 'hidden'}">
+                    <input type="url" id="m3uUrl" placeholder="${t.playlist_label}">
+                </div>
+                
+                <div id="xtreamForm" class="${linkMode === 'xtream' ? '' : 'hidden'}">
+                    <input type="url" id="xHost" placeholder="${t.host}" style="margin-bottom:8px;">
+                    <input type="text" id="xUser" placeholder="${t.user}" style="margin-bottom:8px;">
+                    <input type="password" id="xPass" placeholder="${t.pass}">
+                </div>
+
+                <button class="btn" type="submit">${t.btn_link}</button>
+            </form>
+            <button class="btn btn-secondary" onclick="logout()">${t.btn_logout}</button>
+        `;
     }
 
     async function handleAuth(e) {
         e.preventDefault();
         const email = document.getElementById('email').value;
         const password = document.getElementById('password').value;
-        const url = mode === 'login' ? '/api/auth/login' : '/api/auth/register';
-        
-        try {
-            const res = await fetch(url, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            const data = await res.json();
-            if (res.ok) {
-                if(mode === 'register') alert('Регистрация успешна! Теперь войдите.');
-                mode = 'login';
-                init();
-            } else {
-                showMsg(data.message || 'Ошибка', true);
-            }
-        } catch (e) { showMsg('Ошибка сети', true); }
+        const url = authMode === 'login' ? '/api/auth/login' : '/api/auth/register';
+        const res = await fetch(url, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        if (res.ok) {
+            if (authMode === 'register') alert('Done! Now login.');
+            authMode = 'login'; init();
+        } else alert('Error!');
     }
 
     async function linkDevice(e) {
         e.preventDefault();
+        const t = translations[currentLang];
         const data = {
             macAddress: document.getElementById('mac').value,
             pinCode: document.getElementById('pin').value,
-            playlistUrl: document.getElementById('url').value,
-            isXtream: false
+            isXtream: linkMode === 'xtream',
+            playlistUrl: document.getElementById('m3uUrl')?.value || '',
+            xtreamUrl: document.getElementById('xHost')?.value || '',
+            xtreamUser: document.getElementById('xUser')?.value || '',
+            xtreamPass: document.getElementById('xPass')?.value || ''
         };
+        
         const res = await fetch('/api/link-device', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
         });
-        if (res.ok) {
-            showMsg('Устройство привязано!', false);
-            init();
-        } else {
-            showMsg('Неверный MAC или PIN', true);
-        }
+        if (res.ok) { alert(t.success); init(); } 
+        else alert(t.error);
     }
 
-    function showMsg(txt, isErr) {
-        const m = document.getElementById('msg');
-        m.innerText = txt;
-        m.className = isErr ? 'error' : 'success';
-    }
-
-    function render() {
-        const content = document.getElementById('content');
-        if (mode === 'dashboard') {
-            renderDashboard(content);
-        } else {
-            renderAuth(content);
-        }
-    }
-
-    async function renderDashboard(el) {
-        const res = await fetch('/api/user/devices');
-        const devices = await res.json();
-        
-        el.innerHTML = `
-            <p style="text-align:center; color:#555; margin-bottom:20px;">Аккаунт: ${currentUser.email}</p>
-            <div style="max-height: 250px; overflow-y: auto; margin-bottom: 20px;">
-                ${devices.map(d => `
-                    <div class="device-item">
-                        <h4>MAC: ${d.macAddress.toUpperCase()}</h4>
-                        <p>Плейлист: ${d.playlistUrl || 'Не задан'}</p>
-                    </div>
-                `).join('') || '<p style="text-align:center; color:#444;">У вас пока нет привязанных устройств</p>'}
-            </div>
-            
-            <form onsubmit="linkDevice(event)" style="border-top: 1px solid #222; padding-top: 20px;">
-                <label>Привязать новое устройство</label>
-                <input type="text" id="mac" placeholder="MAC-адрес" required style="margin-bottom:10px;">
-                <input type="text" id="pin" placeholder="PIN-код с экрана ТВ" required style="margin-bottom:10px;">
-                <input type="url" id="url" placeholder="Ссылка на плейлист .m3u" required>
-                <button class="btn" type="submit">Добавить в аккаунт</button>
-            </form>
-            
-            <button class="btn btn-secondary" onclick="logout()">Выйти из профиля</button>
-        `;
-    }
-
-    function renderAuth(el) {
-        el.innerHTML = `
-            <div class="tabs">
-                <div class="tab ${mode === 'login' ? 'active' : ''}" onclick="setMode('login')">Вход</div>
-                <div class="tab ${mode === 'register' ? 'active' : ''}" onclick="setMode('register')">Регистрация</div>
-            </div>
-            <form onsubmit="handleAuth(event)">
-                <div class="input-group">
-                    <label>E-mail</label>
-                    <input type="email" id="email" placeholder="example@mail.com" required>
-                </div>
-                <div class="input-group">
-                    <label>Пароль</label>
-                    <input type="password" id="password" placeholder="••••••••" required>
-                </div>
-                <button class="btn" type="submit">${mode === 'login' ? 'Войти' : 'Создать аккаунт'}</button>
-            </form>
-        `;
-    }
-
-    function setMode(m) { mode = m; render(); }
-    async function logout() { await fetch('/api/auth/logout', { method: 'POST' }); currentUser = null; mode = 'login'; render(); }
+    function setAuthMode(m) { authMode = m; render(); }
+    function setLinkMode(m) { linkMode = m; render(); }
+    async function logout() { await fetch('/api/auth/logout', {method:'POST'}); currentUser=null; authMode='login'; render(); }
 
     init();
 </script>
